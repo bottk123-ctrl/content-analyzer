@@ -2,6 +2,7 @@
 
 Веб-дашборд на **Streamlit** для аналитики контента (TikTok/YouTube). Загружаете CSV
 со статистикой видео — получаете KPI, график просмотров и Топ-5 по лайкам.
+**[Посмотреть живое демо в браузере](https://content-analyzer-bottk.streamlit.app/)**
 
 ![Скриншот дашборда](assets/screenshot.png)
 
