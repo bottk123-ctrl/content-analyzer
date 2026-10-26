@@ -9,8 +9,8 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 def utcnow() -> datetime:
-    """Текущее время в UTC (осознанное, не naive)."""
-    return datetime.now(timezone.utc)
+    """Текущее время UTC без tzinfo (одинаково ведёт себя в SQLite и Postgres)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class Base(DeclarativeBase):
@@ -30,7 +30,7 @@ class User(Base):
     name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     picture: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow
+        DateTime, default=utcnow
     )
 
     tokens: Mapped[list["OAuthToken"]] = relationship(
@@ -55,10 +55,10 @@ class OAuthToken(Base):
     token_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
     scope: Mapped[str | None] = mapped_column(Text, nullable=True)
     expires_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
+        DateTime, nullable=True
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+        DateTime, default=utcnow, onupdate=utcnow
     )
 
     user: Mapped[User] = relationship(back_populates="tokens")
@@ -66,3 +66,22 @@ class OAuthToken(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "provider", name="uq_tokens_user_provider"),
     )
+
+
+class OAuthState(Base):
+    """Одноразовый параметр ``state`` OAuth-потока.
+
+    Храним в БД, потому что при редиректе на провайдера и обратно Streamlit
+    пересоздаёт сессию — ``st.session_state`` между этими шагами недоступен.
+    Используется для защиты от CSRF и проверяется ровно один раз.
+    """
+
+    __tablename__ = "oauth_states"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    state: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    provider: Mapped[str] = mapped_column(String(32), default="google")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
