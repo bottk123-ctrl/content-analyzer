@@ -13,6 +13,11 @@ __pycache__/
 *.csv
 !data/sample.csv
 
+# Секреты Streamlit и локальная БД
+.streamlit/secrets.toml
+*.db
+*.sqlite3
+
 # IDE
 .vscode/
 .idea/
