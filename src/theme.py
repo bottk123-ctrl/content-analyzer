@@ -97,11 +97,39 @@ def inject_css(theme: str) -> None:
             --primary-color: {p['primary']};
         }}
 
-        html, body, .stApp, [class*="st-"] {{ font-family: 'Inter', sans-serif; }}
+        /* Шрифт задаём только контейнерам, НЕ всем [class*="st-"]:
+           emotion-классы Streamlit тоже начинаются с "st-", и широкий селектор
+           перебивал шрифт иконок Material Symbols (иконки рисовались текстом). */
+        html, body, .stApp {{ font-family: 'Inter', sans-serif; }}
         .stApp {{ background: var(--ca-bg); color: var(--ca-text); }}
+
+        /* Явно сохраняем шрифт иконок Material Symbols */
+        [data-testid="stIconMaterial"],
+        .material-symbols-rounded,
+        .material-symbols-outlined,
+        .material-icons {{
+            font-family: 'Material Symbols Rounded', 'Material Symbols Outlined',
+                'Material Icons' !important;
+        }}
 
         /* Убираем дефолтный футер и меню для чистого вида */
         #MainMenu, footer {{ visibility: hidden; }}
+
+        /* Отступы и скругления для st.expander */
+        [data-testid="stExpander"] {{
+            margin: 8px 0 16px;
+            border: 1px solid var(--ca-border);
+            border-radius: 12px;
+            overflow: hidden;
+        }}
+        [data-testid="stExpander"] summary {{
+            padding: 10px 14px;
+            line-height: 1.45;
+        }}
+        [data-testid="stExpander"] summary p {{ margin: 0; }}
+        [data-testid="stExpander"] [data-testid="stExpanderDetails"] {{
+            padding: 4px 16px 12px;
+        }}
 
         /* Hero-баннер */
         .ca-hero {{
