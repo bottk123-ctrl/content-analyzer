@@ -95,6 +95,7 @@ def inject_css(theme: str) -> None:
             --secondary-background-color: {p['panel']};
             --text-color: {p['text']};
             --primary-color: {p['primary']};
+            --sidebar-background-color: {p['bg']};
         }}
 
         /* Шрифт задаём только контейнерам, НЕ всем [class*="st-"]:
@@ -102,6 +103,30 @@ def inject_css(theme: str) -> None:
            перебивал шрифт иконок Material Symbols (иконки рисовались текстом). */
         html, body, .stApp {{ font-family: 'Inter', sans-serif; }}
         .stApp {{ background: var(--ca-bg); color: var(--ca-text); }}
+
+        /* Боковая панель: фон и текст под текущую тему */
+        [data-testid="stSidebar"],
+        [data-testid="stSidebar"] > div,
+        [data-testid="stSidebarContent"] {{
+            background: var(--ca-bg);
+            color: var(--ca-text);
+        }}
+        [data-testid="stSidebar"] {{
+            border-right: 1px solid var(--ca-border);
+        }}
+        [data-testid="stSidebar"] .stMarkdown,
+        [data-testid="stSidebar"] p,
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2,
+        [data-testid="stSidebar"] h3,
+        [data-testid="stSidebar"] h4 {{
+            color: var(--ca-text);
+        }}
+
+        /* Верхняя шапка: прозрачная, чтобы не было белой полосы */
+        header[data-testid="stHeader"] {{ background: transparent; }}
+        [data-testid="stToolbar"] {{ background: transparent; }}
 
         /* Явно сохраняем шрифт иконок Material Symbols */
         [data-testid="stIconMaterial"],
