@@ -128,6 +128,42 @@ def inject_css(theme: str) -> None:
         header[data-testid="stHeader"] {{ background: transparent; }}
         [data-testid="stToolbar"] {{ background: transparent; }}
 
+        /* Файлоаплоадер: тёмная зона загрузки и читаемый текст */
+        [data-testid="stFileUploader"] section,
+        [data-testid="stFileUploaderDropzone"] {{
+            background: var(--ca-panel);
+            border: 1px dashed var(--ca-border);
+            color: var(--ca-text);
+        }}
+        [data-testid="stFileUploaderDropzone"] *,
+        [data-testid="stFileUploader"] span,
+        [data-testid="stFileUploader"] small {{
+            color: var(--ca-text);
+        }}
+        [data-testid="stFileUploader"] small {{ color: var(--ca-muted); }}
+
+        /* Кнопки в сайдбаре: тёмный фон, рамка и текст под тему */
+        [data-testid="stSidebar"] .stButton > button {{
+            background: var(--ca-panel);
+            color: var(--ca-text);
+            border: 1px solid var(--ca-border);
+        }}
+        [data-testid="stSidebar"] .stButton > button:hover {{
+            border-color: var(--ca-primary);
+            color: var(--ca-primary);
+        }}
+
+        /* Переключатель темы (segmented control): убираем белую плашку */
+        [data-testid="stSegmentedControl"],
+        [data-testid="stSegmentedControl"] > div {{
+            background: transparent;
+        }}
+        [data-testid="stSegmentedControl"] [role="radiogroup"] {{
+            background: var(--ca-panel);
+            border: 1px solid var(--ca-border);
+            border-radius: 999px;
+        }}
+
         /* Явно сохраняем шрифт иконок Material Symbols */
         [data-testid="stIconMaterial"],
         .material-symbols-rounded,
