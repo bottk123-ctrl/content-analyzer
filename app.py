@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import streamlit as st
 
+import src.theme as ui
 from src import auth
 from src.auth.oauth import get_valid_access_token
 from src.charts import top_videos_bar_chart, views_line_chart
@@ -29,8 +30,18 @@ auth.handle_oauth_callback()
 
 user = auth.current_user()
 
-st.title("📊 Content Analytics Dashboard")
-st.caption("Данные канала YouTube или CSV-файл — сводные метрики и графики.")
+# --- Тема: переключатель в сайдбаре + инъекция стилей ---
+with st.sidebar:
+    selected_theme = ui.render_theme_toggle()
+
+ui.inject_css(selected_theme)
+
+# --- Шапка страницы ---
+ui.hero(
+    "📊 Content Analytics Dashboard",
+    "Аналитика контента: статистика YouTube-канала или загруженный CSV.",
+    badge=st.session_state.get("channel_title"),
+)
 
 
 def render_empty_state() -> None:
@@ -61,8 +72,9 @@ def load_youtube_data() -> None:
         return
 
     try:
-        channel, videos = fetch_channel_videos(token, max_videos=50)
-        df_yt = videos_to_dataframe(videos)
+        with st.spinner("Загружаем статистику канала…"):
+            channel, videos = fetch_channel_videos(token, max_videos=50)
+            df_yt = videos_to_dataframe(videos)
     except YouTubeAPIError as exc:
         st.session_state["youtube_error"] = str(exc)
         return
@@ -83,6 +95,7 @@ def load_youtube_data() -> None:
 
 # --- Боковая панель: аккаунт и источник данных ---
 with st.sidebar:
+    st.divider()
     st.header("👤 Аккаунт")
     if user:
         if user.get("picture"):
@@ -90,12 +103,12 @@ with st.sidebar:
         st.write(f"**{user.get('name') or 'Пользователь'}**")
         if user.get("email"):
             st.caption(user["email"])
-        if st.button("Выйти", use_container_width=True):
+        if st.button("Выйти", width="stretch"):
             auth.logout()
             st.session_state.pop("df_youtube", None)
             st.rerun()
     else:
-        if st.button("Войти через Google / YouTube", use_container_width=True):
+        if st.button("Войти через Google / YouTube", width="stretch"):
             auth.login()
 
     if error := st.session_state.get("auth_error"):
@@ -114,9 +127,7 @@ with st.sidebar:
         if not user:
             st.info("Войдите, чтобы загрузить статистику канала.")
         else:
-            if st.button(
-                "⬇️ Загрузить статистику канала", use_container_width=True
-            ):
+            if st.button("⬇️ Загрузить статистику канала", width="stretch"):
                 load_youtube_data()
             if error := st.session_state.get("youtube_error"):
                 st.error(error)
@@ -136,10 +147,12 @@ elif source == "YouTube (авто)":
     df = st.session_state.get("df_youtube")
     if df is None:
         render_empty_state()
+        ui.footer("Content Analytics Dashboard · данные YouTube или CSV")
         st.stop()
 
 if df is None:
     render_empty_state()
+    ui.footer("Content Analytics Dashboard · данные YouTube или CSV")
     st.stop()
 
 # --- Контекст: что за канал/источник сейчас показан ---
@@ -153,19 +166,40 @@ top_df = top_videos_by_likes(df, n=5)
 
 # --- Ряд 1: KPI-карточки в три колонки ---
 col1, col2, col3 = st.columns(3)
-col1.metric("🎬 Всего видео", f"{kpis['n_videos']:,}".replace(",", " "))
-col2.metric("👁️ Суммарные просмотры", f"{kpis['total_views']:,}".replace(",", " "))
-col3.metric("❤️ Средний ER", f"{kpis['avg_er']:.2f} %")
+with col1:
+    ui.kpi_card("🎬", f"{kpis['n_videos']:,}".replace(",", " "), "Всего видео")
+with col2:
+    ui.kpi_card(
+        "👁️", f"{kpis['total_views']:,}".replace(",", " "), "Суммарные просмотры"
+    )
+with col3:
+    ui.kpi_card("❤️", f"{kpis['avg_er']:.2f} %", "Средний ER")
 
-st.divider()
+# --- Ряд 2: вкладки Обзор / Данные ---
+tab_overview, tab_data = st.tabs(["📈 Обзор", "📋 Данные"])
 
-# --- Ряд 2: линейный график на всю ширину ---
-st.plotly_chart(views_line_chart(views_df), use_container_width=True)
+with tab_overview:
+    st.plotly_chart(
+        views_line_chart(views_df, selected_theme), width="stretch"
+    )
+    st.plotly_chart(
+        top_videos_bar_chart(top_df, selected_theme), width="stretch"
+    )
 
-# --- Ряд 3: Топ-5 (слева) и таблица данных (справа) ---
-left, right = st.columns([3, 2])
-with left:
-    st.plotly_chart(top_videos_bar_chart(top_df), use_container_width=True)
-with right:
-    st.subheader("📋 Все данные")
-    st.dataframe(df, use_container_width=True, hide_index=True)
+with tab_data:
+    st.dataframe(
+        df,
+        width="stretch",
+        hide_index=True,
+        column_config={
+            "Дата": st.column_config.DateColumn("Дата", format="DD.MM.YYYY"),
+            "Просмотры": st.column_config.NumberColumn("Просмотры", format="%d"),
+            "Лайки": st.column_config.NumberColumn("Лайки", format="%d"),
+            "Комментарии": st.column_config.NumberColumn(
+                "Комментарии", format="%d"
+            ),
+            "Название": st.column_config.TextColumn("Название", width="large"),
+        },
+    )
+
+ui.footer("Content Analytics Dashboard · данные YouTube или CSV")
