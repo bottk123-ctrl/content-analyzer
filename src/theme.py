@@ -74,6 +74,24 @@ def render_theme_toggle() -> str:
 def inject_css(theme: str) -> None:
     """Внедряем CSS-переменные и стили компонентов под выбранную тему."""
     p = get_palette(theme)
+
+    # Правки, которые нужны только в тёмной теме: у некоторых кнопок Streamlit
+    # фон остаётся светлым, поэтому принудительно делаем текст тёмным.
+    dark_rules = ""
+    if theme == "dark":
+        dark_rules = """
+        [data-testid="stFileUploaderDropzone"] button,
+        [data-testid="stFileUploaderDropzone"] button *,
+        [data-testid="stSidebar"] button,
+        [data-testid="stSidebar"] button *,
+        [data-testid="stSegmentedControl"] button,
+        [data-testid="stSegmentedControl"] button *,
+        [data-testid="stSegmentedControl"] label,
+        [data-testid="stSegmentedControl"] label * {
+            color: #111111 !important;
+        }
+        """
+
     st.markdown(
         f"""
         <style>
@@ -250,6 +268,8 @@ def inject_css(theme: str) -> None:
             border-top: 1px solid var(--ca-border);
             color: var(--ca-muted); font-size: .82rem; text-align: center;
         }}
+
+        {dark_rules}
         </style>
         """,
         unsafe_allow_html=True,
