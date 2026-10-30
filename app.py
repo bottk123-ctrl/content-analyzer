@@ -14,7 +14,12 @@ from src.auth.oauth import get_valid_access_token
 from src.charts import top_videos_bar_chart, views_line_chart
 from src.data_loader import DataValidationError, load_csv
 from src.db import init_db
-from src.metrics import compute_kpis, top_videos_by_likes, views_by_date
+from src.metrics import (
+    compute_kpis,
+    compute_trends,
+    top_videos_by_likes,
+    views_by_date,
+)
 from src.youtube import YouTubeAPIError, fetch_channel_videos, videos_to_dataframe
 
 # --- Настройка страницы: широкий layout и заголовок вкладки ---
@@ -47,9 +52,19 @@ ui.hero(
 def render_empty_state() -> None:
     """Подсказка, пока нет данных для анализа."""
     if not user:
-        st.info("👈 Войдите через Google/YouTube в боковой панели или загрузите CSV.")
+        ui.empty_state(
+            "🔐",
+            "Нет данных для анализа",
+            "Войдите через Google/YouTube в боковой панели "
+            "или загрузите CSV-файл.",
+        )
     else:
-        st.info("👈 Загрузите статистику из YouTube или CSV-файл в боковой панели.")
+        ui.empty_state(
+            "📥",
+            "Загрузите статистику",
+            "Выгрузите данные канала из YouTube или загрузите "
+            "CSV-файл в боковой панели.",
+        )
     with st.expander("Ожидаемые колонки в CSV-файле"):
         st.markdown(
             "Поддерживаются русские и английские названия колонок:\n\n"
@@ -161,45 +176,64 @@ if source == "YouTube (авто)" and st.session_state.get("channel_title"):
 
 # --- Расчёт метрик ---
 kpis = compute_kpis(df)
+trends = compute_trends(df)
 views_df = views_by_date(df)
 top_df = top_videos_by_likes(df, n=5)
 
 # --- Ряд 1: KPI-карточки в три колонки ---
 col1, col2, col3 = st.columns(3)
 with col1:
-    ui.kpi_card("🎬", f"{kpis['n_videos']:,}".replace(",", " "), "Всего видео")
+    ui.kpi_card(
+        "🎬",
+        f"{kpis['n_videos']:,}".replace(",", " "),
+        "Всего видео",
+        trends["videos"],
+    )
 with col2:
     ui.kpi_card(
-        "👁️", f"{kpis['total_views']:,}".replace(",", " "), "Суммарные просмотры"
+        "👁️",
+        f"{kpis['total_views']:,}".replace(",", " "),
+        "Суммарные просмотры",
+        trends["views"],
     )
 with col3:
-    ui.kpi_card("❤️", f"{kpis['avg_er']:.2f} %", "Средний ER")
+    ui.kpi_card("❤️", f"{kpis['avg_er']:.2f} %", "Средний ER", trends["er"])
 
 # --- Ряд 2: вкладки Обзор / Данные ---
 tab_overview, tab_data = st.tabs(["📈 Обзор", "📋 Данные"])
 
 with tab_overview:
-    st.plotly_chart(
-        views_line_chart(views_df, selected_theme), width="stretch"
-    )
-    st.plotly_chart(
-        top_videos_bar_chart(top_df, selected_theme), width="stretch"
-    )
+    with st.container(border=True, key="ca-card-views"):
+        ui.section_title("📈 Просмотры по датам")
+        st.plotly_chart(
+            views_line_chart(views_df, selected_theme), width="stretch"
+        )
+    with st.container(border=True, key="ca-card-top"):
+        ui.section_title("🏆 Топ-5 видео по лайкам")
+        st.plotly_chart(
+            top_videos_bar_chart(top_df, selected_theme), width="stretch"
+        )
 
 with tab_data:
-    st.dataframe(
-        df,
-        width="stretch",
-        hide_index=True,
-        column_config={
-            "Дата": st.column_config.DateColumn("Дата", format="DD.MM.YYYY"),
-            "Просмотры": st.column_config.NumberColumn("Просмотры", format="%d"),
-            "Лайки": st.column_config.NumberColumn("Лайки", format="%d"),
-            "Комментарии": st.column_config.NumberColumn(
-                "Комментарии", format="%d"
-            ),
-            "Название": st.column_config.TextColumn("Название", width="large"),
-        },
-    )
+    with st.container(border=True, key="ca-card-data"):
+        ui.section_title("📋 Все данные")
+        st.dataframe(
+            df,
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "Дата": st.column_config.DateColumn("Дата", format="DD.MM.YYYY"),
+                "Просмотры": st.column_config.NumberColumn(
+                    "Просмотры", format="%d"
+                ),
+                "Лайки": st.column_config.NumberColumn("Лайки", format="%d"),
+                "Комментарии": st.column_config.NumberColumn(
+                    "Комментарии", format="%d"
+                ),
+                "Название": st.column_config.TextColumn(
+                    "Название", width="large"
+                ),
+            },
+        )
 
 ui.footer("Content Analytics Dashboard · данные YouTube или CSV")

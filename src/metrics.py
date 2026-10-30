@@ -30,6 +30,51 @@ def compute_kpis(df: pd.DataFrame) -> dict[str, float]:
     }
 
 
+def _pct_change(old: float, new: float) -> float | None:
+    """Изменение в процентах. None, если база сравнения равна нулю."""
+    if old == 0:
+        return None
+    return (new - old) / old * 100.0
+
+
+def _er_mean(part: pd.DataFrame) -> float:
+    """Средний ER по части данных (просмотры == 0 не учитываются)."""
+    views = part["Просмотры"].astype(float).where(part["Просмотры"] != 0)
+    engagements = (part["Лайки"] + part["Комментарии"]).astype(float)
+    er_series = (engagements / views * 100).dropna()
+    return float(er_series.mean()) if not er_series.empty else 0.0
+
+
+def compute_trends(df: pd.DataFrame) -> dict[str, float | None]:
+    """Изменение KPI между второй и первой половиной периода, в процентах.
+
+    Данные сортируются по дате и делятся пополам по медианной дате (с запасным
+    делением по количеству записей). Если половины пусты или база сравнения
+    нулевая — соответствующее значение равно None.
+    """
+    empty = {"videos": None, "views": None, "er": None}
+    if len(df) < 2:
+        return empty
+
+    ordered = df.sort_values("Дата").reset_index(drop=True)
+    cutoff = ordered["Дата"].median()
+    first = ordered[ordered["Дата"] <= cutoff]
+    second = ordered[ordered["Дата"] > cutoff]
+    if first.empty or second.empty:
+        mid = len(ordered) // 2
+        first, second = ordered.iloc[:mid], ordered.iloc[mid:]
+    if first.empty or second.empty:
+        return empty
+
+    return {
+        "videos": _pct_change(len(first), len(second)),
+        "views": _pct_change(
+            int(first["Просмотры"].sum()), int(second["Просмотры"].sum())
+        ),
+        "er": _pct_change(_er_mean(first), _er_mean(second)),
+    }
+
+
 def views_by_date(df: pd.DataFrame) -> pd.DataFrame:
     """Суммарные просмотры, сгруппированные по дате."""
     grouped = (
