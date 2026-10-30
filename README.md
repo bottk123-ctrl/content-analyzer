@@ -1,112 +1,119 @@
 # 📊 Content Analytics Dashboard
 
-Веб-дашборд на **Streamlit** для аналитики контента (TikTok/YouTube). Войдите
-через Google и получите статистику своего YouTube-канала автоматически — либо
-загрузите CSV вручную. На выходе: KPI, график просмотров и Топ-5 по лайкам.
-**[Посмотреть живое демо в браузере](https://content-analyzer-bottk.streamlit.app/)**
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![OAuth 2.0](https://img.shields.io/badge/OAuth-2.0-4285F4?logo=google&logoColor=white)](#google--youtube-sign-in-setup)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Live demo](https://img.shields.io/badge/demo-live-brightgreen)](https://content-analyzer-bottk.streamlit.app/)
 
-![Скриншот дашборда](assets/screenshot.png)
+A **Streamlit** web dashboard for **YouTube / TikTok content analytics**.
+Sign in with Google to pull your YouTube channel stats automatically — or upload a
+CSV manually. The result: KPI cards, a views timeline, and a Top-5-by-likes chart.
 
-## Возможности
+**[▶ Open the live demo](https://content-analyzer-bottk.streamlit.app/)**
 
-- **Вход через Google/YouTube** с автоматической выгрузкой статистики канала
-  через YouTube Data API v3 (последние 50 видео).
-- **Светлая и тёмная тема** с переключателем в сайдбаре; hero-шапка,
-  KPI-карточки, вкладки «Обзор/Данные» и стилизованная таблица.
-- Загрузка CSV с **автоопределением разделителя** (`,` или `;`) — как запасной
-  источник данных.
-- **Гибкий парсинг дат**: понимает `дд.мм.гггг` и ISO (`гггг-мм-дд`).
-- KPI: количество видео, суммарные просмотры, средний ER.
-- Линейный график просмотров по датам (Plotly).
-- Горизонтальная гистограмма Топ-5 видео по лайкам.
-- Таблица со всеми данными.
+![Dashboard screenshot](assets/screenshot.png)
 
-**ER** считается как `(Лайки + Комментарии) / Просмотры × 100`.
+## ✨ Features
 
-## Структура проекта
+- **Google / YouTube sign-in** — automatically fetches the last 50 videos of your
+  channel via the YouTube Data API v3.
+- **Light & dark themes** with a sidebar toggle — hero header, KPI cards,
+  "Overview / Data" tabs, and a styled table.
+- **CSV upload** with automatic delimiter detection (`,` or `;`) as a fallback
+  data source.
+- **Flexible date parsing** — understands `dd.mm.yyyy` and ISO (`yyyy-mm-dd`).
+- **KPIs:** video count, total views, average ER.
+- **Views-over-time** line chart (Plotly).
+- **Top-5 videos by likes** horizontal bar chart.
+- **Full data table.**
+
+> **ER** (engagement rate) is computed as `(Likes + Comments) / Views × 100`.
+
+## 🏗 Architecture
 
 ```
 content-analyzer/
-├── app.py                    # UI, layout, логин-гейт, оркестрация
-├── requirements.txt          # Зависимости
+├── app.py                    # UI, layout, login gate, orchestration
+├── requirements.txt          # dependencies
 ├── .streamlit/
-│   ├── config.toml           # Настройки темы/layout
-│   └── secrets.example.toml  # Шаблон секретов (скопировать в secrets.toml)
+│   ├── config.toml           # theme / layout settings
+│   └── secrets.example.toml  # secrets template (copy to secrets.toml)
 ├── src/
-│   ├── data_loader.py        # Загрузка и валидация CSV
-│   ├── metrics.py            # KPI и агрегации
-│   ├── charts.py             # Функции построения Plotly-графиков
-│   ├── theme.py              # Палитры light/dark, CSS, переключатель темы
-│   ├── auth/                 # OAuth 2.0 вход через Google
-│   │   ├── oauth.py          # authorization code flow, refresh токенов
-│   │   └── session.py        # текущий пользователь в сессии Streamlit
-│   ├── db/                   # Хранилище пользователей и токенов
-│   │   ├── database.py       # подключение (SQLite/Postgres)
-│   │   ├── models.py         # модели User, OAuthToken, OAuthState
-│   │   └── crypto.py         # шифрование токенов (Fernet)
-│   └── youtube/              # Интеграция с YouTube Data API
-│       ├── client.py         # выгрузка видео и статистики
-│       └── transform.py      # ответ API -> внутренний DataFrame
-├── assets/screenshot.png     # Скриншот интерфейса
-└── data/sample.csv           # Пример данных
+│   ├── data_loader.py        # CSV loading & validation
+│   ├── metrics.py            # KPIs and aggregations
+│   ├── charts.py             # Plotly chart builders
+│   ├── theme.py              # light/dark palettes, CSS, theme toggle
+│   ├── auth/                 # Google OAuth 2.0
+│   │   ├── oauth.py          # authorization code flow, token refresh
+│   │   └── session.py        # current user in the Streamlit session
+│   ├── db/                   # user & token storage
+│   │   ├── database.py       # connection (SQLite / Postgres)
+│   │   ├── models.py         # User, OAuthToken, OAuthState models
+│   │   └── crypto.py         # token encryption (Fernet)
+│   └── youtube/              # YouTube Data API integration
+│       ├── client.py         # fetch videos & statistics
+│       └── transform.py      # API response -> internal DataFrame
+├── assets/screenshot.png     # UI screenshot
+└── data/sample.csv           # sample data
 ```
 
-## Установка
+**Stack:** `Python` · `Streamlit` · `Plotly` · `Pandas` · `Authlib` · `SQLAlchemy` · `Fernet`
+
+## 🚀 Quick start
 
 ```bash
 python -m venv .venv
 # Windows:
 .venv\Scripts\activate
-# macOS/Linux:
+# macOS / Linux:
 source .venv/bin/activate
 
 pip install -r requirements.txt
+streamlit run app.py
 ```
 
-## Настройка входа через Google / YouTube
+Open http://localhost:8501. Sign in with Google to load channel stats, or switch
+the source to **CSV file** and upload `data/sample.csv`.
 
-Встроенный `st.login()` в Streamlit работает только на аутентификацию через OIDC
-и **не даёт access token** для вызовов API, поэтому здесь реализован собственный
-OAuth 2.0 authorization code flow (на Authlib).
+## 🔐 Google / YouTube sign-in setup
 
-1. **Google Cloud Console**: создайте проект, включите **YouTube Data API v3**.
-2. Настройте **OAuth consent screen** и добавьте себя в **Test users**
-   (scope `youtube.readonly` относится к sensitive — до верификации Google
-   доступен только тестовым пользователям, до 100 аккаунтов).
-3. Создайте **OAuth client ID** типа *Web application* и добавьте
-   **Authorized redirect URI**, точно совпадающий с `redirect_uri` из секретов:
-   - локально: `http://localhost:8501/`
-   - на Streamlit Cloud: `https://<app-name>.streamlit.app/`
-4. Скопируйте `.streamlit/secrets.example.toml` в `.streamlit/secrets.toml` и
-   заполните `client_id`, `client_secret`, `redirect_uri` и `token_encryption_key`.
-   Ключ шифрования можно сгенерировать так:
+Streamlit's built-in `st.login()` only performs OIDC authentication and **does not
+expose an access token** for API calls, so this app implements its own OAuth 2.0
+authorization code flow (via Authlib).
+
+1. **Google Cloud Console** — create a project and enable **YouTube Data API v3**.
+2. Configure the **OAuth consent screen** and add yourself to **Test users**
+   (`youtube.readonly` is a sensitive scope; before verification it works only for
+   test users, up to 100 accounts).
+3. Create an **OAuth client ID** of type *Web application* and add an
+   **Authorized redirect URI** matching `redirect_uri` in your secrets exactly:
+   - local: `http://localhost:8501/`
+   - Streamlit Cloud: `https://<app-name>.streamlit.app/`
+4. Copy `.streamlit/secrets.example.toml` to `.streamlit/secrets.toml` and fill in
+   `client_id`, `client_secret`, `redirect_uri`, and `token_encryption_key`.
+   Generate an encryption key with:
    ```bash
    python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
    ```
 
-`secrets.toml` добавлен в `.gitignore` — реальные секреты не попадут в репозиторий.
+`secrets.toml` is git-ignored — real secrets never reach the repository.
 
-## Хранилище
+## 💾 Storage
 
-- Локально по умолчанию используется **SQLite** (`content_analyzer.db`).
-- URL можно переопределить секретом `database.url` или переменной окружения
-  `DATABASE_URL`.
-- На Streamlit Community Cloud файловая система **непостоянна**, поэтому для
-  продакшена укажите внешний **Postgres** (Neon/Supabase и т.п.).
+- Locally uses **SQLite** (`content_analyzer.db`) by default.
+- Override the URL via the `database.url` secret or the `DATABASE_URL` env var.
+- On Streamlit Community Cloud the filesystem is **ephemeral**, so use an external
+  **Postgres** (Neon / Supabase, etc.) in production.
 
-OAuth-токены хранятся в БД **в зашифрованном виде** (Fernet).
+OAuth tokens are stored in the database **encrypted** (Fernet).
 
-## Запуск
+## 📄 CSV format
 
-```bash
-streamlit run app.py
-```
+Required columns: `Дата`, `Просмотры`, `Лайки`, `Комментарии`
+(`Название` is auto-filled from the date when missing).
 
-Откройте браузер по адресу `http://localhost:8501`. Войдите через Google, чтобы
-загрузить статистику канала, либо переключитесь на источник «CSV-файл» и
-загрузите `data/sample.csv`.
+## 📜 License
 
-## Формат CSV
-
-Обязательные колонки: `Дата`, `Просмотры`, `Лайки`, `Комментарии`
-(`Название` подставляется автоматически из даты, если её нет).
+MIT — see [LICENSE](LICENSE).
