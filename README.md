@@ -55,7 +55,11 @@ content-analyzer/
 │   └── youtube/              # YouTube Data API integration
 │       ├── client.py         # fetch videos & statistics
 │       └── transform.py      # API response -> internal DataFrame
-├── assets/screenshot.png     # UI screenshot
+├── scripts/
+│   └── screenshot.py         # regenerate README screenshots (Playwright)
+├── assets/
+│   ├── screenshot.png        # UI screenshot (light theme)
+│   └── screenshot-dark.png   # UI screenshot (dark theme)
 └── data/sample.csv           # sample data
 ```
 
