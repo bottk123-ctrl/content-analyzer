@@ -22,6 +22,9 @@ from src.metrics import (
 )
 from src.youtube import YouTubeAPIError, fetch_channel_videos, videos_to_dataframe
 
+# Подпись футера: используется в нескольких ветках рендера.
+FOOTER_TEXT = "Content Analytics Dashboard · данные YouTube или CSV"
+
 # --- Настройка страницы: широкий layout и заголовок вкладки ---
 st.set_page_config(
     page_title="Content Analytics Dashboard",
@@ -162,12 +165,12 @@ elif source == "YouTube (авто)":
     df = st.session_state.get("df_youtube")
     if df is None:
         render_empty_state()
-        ui.footer("Content Analytics Dashboard · данные YouTube или CSV")
+        ui.footer(FOOTER_TEXT)
         st.stop()
 
 if df is None:
     render_empty_state()
-    ui.footer("Content Analytics Dashboard · данные YouTube или CSV")
+    ui.footer(FOOTER_TEXT)
     st.stop()
 
 # --- Контекст: что за канал/источник сейчас показан ---
@@ -236,4 +239,4 @@ with tab_data:
             },
         )
 
-ui.footer("Content Analytics Dashboard · данные YouTube или CSV")
+ui.footer(FOOTER_TEXT)
