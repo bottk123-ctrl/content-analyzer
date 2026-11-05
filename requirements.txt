@@ -1,6 +1,6 @@
-streamlit>=1.32
+streamlit>=1.51
 pandas>=2.0
-plotly>=5.19
+plotly>=5.20
 
 # Аутентификация через OAuth 2.0 (Google/YouTube)
 Authlib>=1.3
